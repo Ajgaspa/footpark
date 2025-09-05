@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Divisor de Equipes de Futebol</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      background-color: var(--card);
+      text-align: center;
+    }
+    .login-container input {
+      margin-bottom: 15px;
+    }
+    #app-container {
+      display: none; /* O app fica oculto por padrão */
+    }
+    #app-container.show {
+      display: block; /* É exibido quando o usuário está logado */
+    }
+  </style>
+</head>
+<body>
+  <div id="status" class="status muted">Conectando ao Firebase...</div>
+
+  <div id="login-container" class="login-container">
+    <h2>Login</h2>
+    <input type="email" id="login-email" placeholder="E-mail" required>
+    <input type="password" id="login-password" placeholder="Senha" required>
+    <button id="btnLogin" class="btn">Entrar</button>
+  </div>
+
+  <div id="app-container">
+    <div style="text-align: right; margin-bottom: 12px;">
+      <button id="btnLogout" class="btn btn-danger">Sair</button>
+    </div>
+    <h1>Divisor de Equipes de Futebol</h1>
+
+    <div class="grid two">
+      <div class="card">
+        <h2>Adicionar / Editar Jogador</h2>
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" placeholder="Nome do jogador" required>
+
+        <label for="pe">Pé dominante *</label>
+        <select id="pe" required>
+          <option value="">Selecione</option>
+          <option value="destro">Destro</option>
+          <option value="canhoto">Canhoto</option>
+          <option value="ambidestro">Ambidestro</option>
+        </select>
+
+        <label for="papagaio">Papagaio</label>
+        <select id="papagaio">
+          <option value="nao">Não</option>
+          <option value="sim">Sim</option>
+        </select>
+
+        <label>Posições que joga *</label>
+        <div class="posicoes-grid">
+          <div class="pos-item">
+            <input type="checkbox" id="ataque" value="ataque"><label for="ataque">Ataque</label>
+            <input type="checkbox" id="preferida-ataque" class="preferida-check"><label for="preferida-ataque" class="small muted">Pref.</label>
+          </div>
+          <div class="pos-item">
+            <input type="checkbox" id="meio" value="meio"><label for="meio">Meio</label>
+            <input type="checkbox" id="preferida-meio" class="preferida-check"><label for="preferida-meio" class="small muted">Pref.</label>
+          </div>
+          <div class="pos-item">
+            <input type="checkbox" id="defesa" value="defesa"><label for="defesa">Defesa</label>
+            <input type="checkbox" id="preferida-defesa" class="preferida-check"><label for="preferida-defesa" class="small muted">Pref.</label>
+          </div>
+          <div class="pos-item">
+            <input type="checkbox" id="goleiro" value="goleiro"><label for="goleiro">Goleiro</label>
+            <input type="checkbox" id="preferida-goleiro" class="preferida-check"><label for="preferida-goleiro" class="small muted">Pref.</label>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <label for="nivel">Nível</label><select id="nivel"></select>
+          <label for="agilidade">Agilidade</label><select id="agilidade"></select>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnSalvar" class="btn">Salvar Jogador</button>
+          <button id="btnCancelar" class="btn btn-warn" style="display:none">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Configurar e Sortear</h2>
+
+        <label for="jogadoresPorEquipe">Jogadores por equipe</label>
+        <select id="jogadoresPorEquipe"></select>
+
+        <div class="row" style="margin-top:12px">
+          <button id="btnDividir" class="btn">Dividir Equipes</button>
+          <button id="btnSalvarSorteio" class="btn btn-warn" disabled>Salvar Sorteio</button>
+        </div>
+
+        <div class="small muted" style="margin-top:8px">
+          A posição preferida tem prioridade no sorteio. Se não especificada, usa a primeira posição marcada.
+        </div>
+
+        <div style="margin-top:12px">
+          <h3 style="text-align:center;margin:.5rem 0">Resultado do Sorteio</h3>
+          <div id="resultadoSorteio" class="teams"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Jogadores (<span id="countJogadores">0</span>) / Selecionados (<span id="contSelecionados">0</span>)</h2>
+      <div id="listaJogadores" class="player-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Histórico de Sorteios</h2>
+      <div id="historicoSorteios"></div>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
