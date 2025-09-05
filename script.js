@@ -93,9 +93,7 @@ function renderizarJogadores(){
       <div class="item-left">
         <div><strong>${j.nome}</strong></div>
         <div class="pill-group">
-          ${j.posicoes.map(p=>`<div class="pill ${j.posicaoPreferida===p?'preferida':''}">
-            ${p==='ataque'?'Ataque':p==='meio'?'Meio':p==='defesa'?'Defesa':'Goleiro'}
-          </div>`).join('')}
+          ${j.posicoes.map(p=>`<div class="pill ${p==='ataque'?'atacante':p==='meio'?'meio-campo':p==='defesa'?'zagueiro':p=='goleiro'?'goleiro':'generico'}">${p}</div>`).join('')}
         </div>
       </div>
       <div class="item-right">
@@ -326,6 +324,7 @@ try{
   mostrarStatus('Conectando ao Firebase...');
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app); // Inicializa a autenticação
+  auth.settings.appVerificationDisabledForTesting = true; // Adiciona esta linha
   db = getDatabase(app);
   jogadoresRef = ref(db,'jogadores');
   sorteiosRef = ref(db,'sorteios');
