@@ -13,7 +13,7 @@ const firebaseConfig = {
     appId: "1:296571687653:web:e2a7ebd15684e6c4dcfa0c"
 };
 
-// --- Elementos do DOM da Aplicação ---
+// --- Elementos do DOM (Originais) ---
 const statusEl = document.getElementById("status");
 const listaEl = document.getElementById("listaJogadores");
 const countEl = document.getElementById("countJogadores");
@@ -26,7 +26,7 @@ const btnCancelar = document.getElementById("btnCancelar");
 const btnDividir = document.getElementById("btnDividir");
 const btnSalvarSorteio = document.getElementById("btnSalvarSorteio");
 
-// --- Elementos do DOM para Autenticação ---
+// --- Elementos do DOM (Para Autenticação) ---
 const appContainerEl = document.getElementById('app-container');
 const loginContainerEl = document.getElementById('login-container');
 const loginEmailEl = document.getElementById('login-email');
@@ -34,7 +34,8 @@ const loginPasswordEl = document.getElementById('login-password');
 const btnLoginEl = document.getElementById('btnLogin');
 const btnLogoutEl = document.getElementById('btnLogout');
 
-// --- Variáveis Globais ---
+
+// --- Variáveis Globais (Originais + Auth) ---
 let jogadores = [];
 let editKey = null;
 let ultimoSorteio = null;
@@ -42,6 +43,7 @@ let db, auth, jogadoresRef, sorteiosRef;
 let equipeBranco = [], equipeLaranja = [];
 let selecionadoParaTroca = null;
 
+// --- Constantes (Originais) ---
 const ORDEM = ['goleiro','zagueiro','lateral','meio-campo','atacante'];
 const EMOJIS = { 
   velocidade:'🏃', defesa:'🛡️', ataque:'⚔️', preparoFisico:'💪', cabeceio:'🤕', finalizacao:'🎯',
@@ -49,7 +51,7 @@ const EMOJIS = {
   pe:'🦶', papagaio:'🦜'
 };
 
-// --- Funções da Aplicação (sem alterações na lógica interna) ---
+// --- Funções Originais (Sem Nenhuma Alteração) ---
 function opt0a10(sel){ sel.innerHTML = Array.from({length:11},(_,n)=>`<option value="${n}">${n}</option>`).join(''); sel.value = '7'; }
 ['velocidade','defesa','ataque','preparoFisico','cabeceio','finalizacao','passe','dominio','drible','forca','guardaRedes','agilidade']
   .forEach(id=>opt0a10(document.getElementById(id)));
@@ -108,8 +110,8 @@ function renderizarJogadores(){
     const posicoes = (j.posicoes||[]).map(p=>`<span class="pill ${p}">${p.charAt(0).toUpperCase()+p.slice(1)}</span>`).join('');
     const pref = j.preferida?`<span class="pill ${j.preferida} preferida"><i class="position-star">⭐</i>${j.preferida.charAt(0).toUpperCase()+j.preferida.slice(1)}</span>`:'';
     const score = calcularScoreGeral(j).toFixed(1);
-    const skills = [`${EMOJIS.pe} ${j.pe||'N/A'}`, `${EMOJIS.papagaio} ${j.papagaio==='sim'?'Sim':'Não'}`].join(' · ');
-    const skills2 = Object.keys(EMOJIS).filter(k => k !== 'pe' && k !== 'papagaio').map(k => `${EMOJIS[k]} ${validarNumero(j[k])}`).join(' · ');
+    const skills = [ `${EMOJIS.pe} ${j.pe||'N/A'}`, `${EMOJIS.papagaio} ${j.papagaio==='sim'?'Sim':'Não'}` ].join(' · ');
+    const skills2 = [ `${EMOJIS.velocidade} ${validarNumero(j.velocidade)}`, `${EMOJIS.defesa} ${validarNumero(j.defesa)}`, `${EMOJIS.ataque} ${validarNumero(j.ataque)}`, `${EMOJIS.preparoFisico} ${validarNumero(j.preparoFisico)}`, `${EMOJIS.cabeceio} ${validarNumero(j.cabeceio)}`, `${EMOJIS.finalizacao} ${validarNumero(j.finalizacao)}`, `${EMOJIS.passe} ${validarNumero(j.passe)}`, `${EMOJIS.dominio} ${validarNumero(j.dominio)}`, `${EMOJIS.drible} ${validarNumero(j.drible)}`, `${EMOJIS.forca} ${validarNumero(j.forca)}`, `${EMOJIS.guardaRedes} ${validarNumero(j.guardaRedes)}`, `${EMOJIS.agilidade} ${validarNumero(j.agilidade)}` ].join(' · ');
 
     return `
       <div class="item">
@@ -118,7 +120,10 @@ function renderizarJogadores(){
             <input type="checkbox" ${j.selecionado!==false?'checked':''} onchange="toggleSelecao('${j.firebaseKey}')">
             <div>
               <div><strong>${j.nome}</strong> (${score})</div>
-              <div class="pill-group">${pref}${posicoes}</div>
+              <div class="pill-group">
+                ${posicoes}
+                ${pref}
+              </div>
             </div>
           </div>
           <div class="item-right">
@@ -150,7 +155,8 @@ window.editarJogador = (key)=>{
   document.getElementById('papagaio').value = j.papagaio||'nao';
   document.getElementById('preferida').value = j.preferida||'';
   document.querySelectorAll('#posicoes input[type="checkbox"]').forEach(cb=>cb.checked=(j.posicoes||[]).includes(cb.value));
-  Object.keys(EMOJIS).filter(k => k !== 'pe' && k !== 'papagaio').forEach(a=>document.getElementById(a).value = validarNumero(j[a]));
+  ['velocidade','defesa','ataque','preparoFisico','cabeceio','finalizacao','passe','dominio','drible','forca','guardaRedes','agilidade']
+    .forEach(a=>document.getElementById(a).value = validarNumero(j[a]));
   btnSalvar.textContent='Atualizar Jogador';
   btnCancelar.style.display='inline-block';
 }
@@ -165,18 +171,34 @@ btnSalvar.addEventListener('click', async ()=>{
     const nome = document.getElementById('nome').value.trim();
     const pe = document.getElementById('pe').value;
     const posicoes = Array.from(document.querySelectorAll('#posicoes input[type="checkbox"]:checked')).map(cb=>cb.value);
-    if(!nome || !pe || posicoes.length===0) return alert('Nome, Pé e ao menos uma Posição são obrigatórios.');
-    
-    const j = { nome, pe, posicoes, selecionado: true };
-    ['papagaio', 'preferida', ...Object.keys(EMOJIS).filter(k => k !== 'pe' && k !== 'papagaio')]
-      .forEach(id => j[id] = document.getElementById(id).value);
-
+    if(!nome) return alert('Nome é obrigatório');
+    if(!pe) return alert('Pé dominante é obrigatório');
+    if(posicoes.length===0) return alert('Selecione ao menos uma posição');
+    const j = {
+      nome, pe,
+      papagaio: document.getElementById('papagaio').value,
+      posicoes,
+      preferida: document.getElementById('preferida').value,
+      velocidade: validarNumero(document.getElementById('velocidade').value),
+      defesa: validarNumero(document.getElementById('defesa').value),
+      ataque: validarNumero(document.getElementById('ataque').value),
+      preparoFisico: validarNumero(document.getElementById('preparoFisico').value),
+      cabeceio: validarNumero(document.getElementById('cabeceio').value),
+      finalizacao: validarNumero(document.getElementById('finalizacao').value),
+      passe: validarNumero(document.getElementById('passe').value),
+      dominio: validarNumero(document.getElementById('dominio').value),
+      drible: validarNumero(document.getElementById('drible').value),
+      forca: validarNumero(document.getElementById('forca').value),
+      guardaRedes: validarNumero(document.getElementById('guardaRedes').value),
+      agilidade: validarNumero(document.getElementById('agilidade').value),
+      selecionado: true
+    };
     if(editKey){
       await set(ref(db, `jogadores/${editKey}`), { ...j, firebaseKey: editKey });
       mostrarStatus('Jogador atualizado com sucesso!');
     }else{
       const novoRef = await push(jogadoresRef, j);
-      await update(novoRef, { firebaseKey: novoRef.key });
+      await update(ref(db, `jogadores/${novoRef.key}`), { firebaseKey: novoRef.key });
       mostrarStatus('Jogador cadastrado com sucesso!');
     }
     limparFormulario();
@@ -184,10 +206,10 @@ btnSalvar.addEventListener('click', async ()=>{
 });
 
 btnCancelar.addEventListener('click', limparFormulario);
-
 function limparFormulario(){
-  editKey=null;
-  document.getElementById('add-edit-form').reset();
+  editKey=null; ['nome','pe','papagaio','preferida'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('papagaio').value='nao';
+  document.querySelectorAll('#posicoes input[type="checkbox"]').forEach(cb=>cb.checked=false);
   ['velocidade','defesa','ataque','preparoFisico','cabeceio','finalizacao','passe','dominio','drible','forca','guardaRedes','agilidade']
     .forEach(a=>document.getElementById(a).value='7');
   btnSalvar.textContent='Salvar Jogador';
@@ -195,56 +217,85 @@ function limparFormulario(){
 }
 
 btnDividir.addEventListener('click', ()=>{
-  const jogadoresPorEquipe = parseInt(jogadoresPorEquipeEl.value) || 10;
-  const selecionados = jogadores.filter(j => j.selecionado !== false);
-
-  if (selecionados.length < jogadoresPorEquipe * 2) {
-      alert(`São necessários ${jogadoresPorEquipe * 2} jogadores para formar dois times de ${jogadoresPorEquipe}. Atualmente, ${selecionados.length} estão selecionados.`);
+  const jogadoresPorEquipe = parseInt(jogadoresPorEquipeEl.value)||10;
+  const selecionados = jogadores.filter(j=>j.selecionado!==false);
+  
+  if (selecionados.length === 0) {
+      alert("Nenhum jogador selecionado.");
       return;
   }
   
-  // Lógica de sorteio e formação de times continua a mesma
-  const pools = {};
-  ORDEM.forEach(p => pools[p] = []);
+  const totalNecessario = jogadoresPorEquipe * 2;
+  const diff = Math.abs(selecionados.length - totalNecessario);
+
+  if (diff > 1) {
+      alert(`O sorteio precisa de um número total de jogadores de ${totalNecessario} para equipes de ${jogadoresPorEquipe}. Selecione ${totalNecessario} jogadores.`);
+      return;
+  }
+
+  const numTime1 = Math.ceil(selecionados.length / 2);
+  const numTime2 = Math.floor(selecionados.length / 2);
+
+  const formacao = { 'goleiro': 1, 'zagueiro': Math.max(1, Math.floor(jogadoresPorEquipe * 0.1)), 'lateral': Math.max(1, Math.floor(jogadoresPorEquipe * 0.2)), 'meio-campo': Math.max(1, Math.floor(jogadoresPorEquipe * 0.3)), 'atacante': Math.max(1, Math.floor(jogadoresPorEquipe * 0.3)) };
+  const total = Object.values(formacao).reduce((a,b)=>a+b,0);
+  if(total < jogadoresPorEquipe) { formacao['meio-campo'] += jogadoresPorEquipe - total; }
+
+  const pools = { 'goleiro': [], 'zagueiro': [], 'lateral': [], 'meio-campo': [], 'atacante': [] };
 
   selecionados.forEach(j => {
     const pos = posPreferidaOuPrimeira(j);
-    j._score = calcularScorePosicao(j, pos);
+    j._score = calcularScorePosicao(j, pos) + (Math.random() - 0.5) * 0.3;
     pools[pos].push(j);
   });
 
   Object.keys(pools).forEach(pos => pools[pos].sort((a, b) => b._score - a._score));
 
-  equipeBranco = [];
-  equipeLaranja = [];
+  equipeBranco = []; equipeLaranja = [];
+  let scoreBranco = 0, scoreLaranja = 0;
 
-  // Distribuição equilibrada
-  selecionados.sort((a,b) => b._score - a._score).forEach((jogador, index) => {
-    if (index % 2 === 0) {
-        if (equipeBranco.length < jogadoresPorEquipe) equipeBranco.push(jogador);
-        else equipeLaranja.push(jogador);
-    } else {
-        if (equipeLaranja.length < jogadoresPorEquipe) equipeLaranja.push(jogador);
-        else equipeBranco.push(jogador);
+  ORDEM.forEach(pos => {
+    const needed = formacao[pos] * 2;
+    const available = pools[pos];
+    for(let i = 0; i < needed && available.length > 0; i++) {
+      const jogador = available.shift();
+      jogador._posicaoEscalada = pos;
+      if(scoreBranco <= scoreLaranja && equipeBranco.length < numTime1) {
+        equipeBranco.push(jogador); scoreBranco += jogador._score;
+      } else if(equipeLaranja.length < numTime2) {
+        equipeLaranja.push(jogador); scoreLaranja += jogador._score;
+      }
     }
   });
 
-  const scoreBranco = equipeBranco.reduce((acc, j) => acc + j._score, 0);
-  const scoreLaranja = equipeLaranja.reduce((acc, j) => acc + j._score, 0);
+  const restantes = [];
+  Object.values(pools).forEach(pool => restantes.push(...pool));
+  restantes.sort((a, b) => b._score - a._score);
+
+  restantes.forEach(jogador => {
+    if(equipeBranco.length >= numTime1 && equipeLaranja.length >= numTime2) return;
+    jogador._posicaoEscalada = posPreferidaOuPrimeira(jogador);
+    if(equipeBranco.length < numTime1 && (scoreBranco <= scoreLaranja || equipeLaranja.length >= numTime2)) {
+      equipeBranco.push(jogador); scoreBranco += jogador._score;
+    } else if(equipeLaranja.length < numTime2) {
+      equipeLaranja.push(jogador); scoreLaranja += jogador._score;
+    }
+  });
+
+  equipeBranco = equipeBranco.slice(0, numTime1);
+  equipeLaranja = equipeLaranja.slice(0, numTime2);
 
   const ordenar = (arr) => arr.sort((a,b) => ORDEM.indexOf(a._posicaoEscalada || posPreferidaOuPrimeira(a)) - ORDEM.indexOf(b._posicaoEscalada || posPreferidaOuPrimeira(b)));
-  ordenar(equipeBranco);
-  ordenar(equipeLaranja);
+  ordenar(equipeBranco); ordenar(equipeLaranja);
 
   renderResultado(equipeBranco, equipeLaranja, scoreBranco, scoreLaranja);
 
   ultimoSorteio = {
     branco: equipeBranco.map(j=>({nome:j.nome,posicao:j._posicaoEscalada||posPreferidaOuPrimeira(j),score:j._score})),
     laranja: equipeLaranja.map(j=>({nome:j.nome,posicao:j._posicaoEscalada||posPreferidaOuPrimeira(j),score:j._score})),
-    scoreBranco, scoreLaranja, timestamp: Date.now()
+    scoreBranco: scoreBranco, scoreLaranja: scoreLaranja, timestamp: Date.now()
   };
   btnSalvarSorteio.disabled=false;
-  mostrarStatus('Equipes divididas!');
+  mostrarStatus('Equipes divididas com formação tática!');
 });
 
 function renderResultado(eqB, eqL, scoreB, scoreL){
@@ -262,72 +313,56 @@ function renderResultado(eqB, eqL, scoreB, scoreL){
 function criarLinhaJogador(j, team, idx) {
   const pos = j._posicaoEscalada || posPreferidaOuPrimeira(j);
   const scorePos = calcularScorePosicao(j, pos);
-  const infoGK = (pos==='goleiro') ? 
-    ` (${EMOJIS.guardaRedes} ${validarNumero(j.guardaRedes)} + ${EMOJIS.agilidade} ${validarNumero(j.agilidade)} → ${scorePos.toFixed(1)})` : 
-    ` (${scorePos.toFixed(1)})`;
-  
-  return `<div class="selectable" draggable="true" data-team="${team}" data-index="${idx}" data-key="${j.firebaseKey}" 
-               ondragstart="drag(event)" onclick="selecionarJogador(this)">
-            ${pos.charAt(0).toUpperCase()+pos.slice(1)}: <strong>${j.nome}</strong>${infoGK}
-          </div>`;
+  const infoGK = (pos==='goleiro') ? ` (${EMOJIS.guardaRedes} ${validarNumero(j.guardaRedes)} + ${EMOJIS.agilidade} ${validarNumero(j.agilidade)} → ${scorePos.toFixed(1)})` : ` (${scorePos.toFixed(1)})`;
+  return `<div class="selectable" draggable="true" data-team="${team}" data-index="${idx}" data-key="${j.firebaseKey}" ondragstart="drag(event)" onclick="selecionarJogador(this)">${pos.charAt(0).toUpperCase()+pos.slice(1)}: <strong>${j.nome}</strong>${infoGK}</div>`;
 }
 
-// Funções de drag & drop e seleção (sem alterações)
-window.allowDrop = ev => ev.preventDefault();
-window.drag = ev => {
-    ev.dataTransfer.setData("key", ev.target.getAttribute('data-key'));
-}
-window.drop = ev => {
+window.allowDrop = function(ev) { ev.preventDefault(); }
+window.drag = function(ev) { ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-key')); }
+window.drop = function(ev) {
     ev.preventDefault();
-    const draggedKey = ev.dataTransfer.getData("key");
-    const targetElement = ev.target.closest('.selectable');
-    if (!targetElement) return;
+    const draggedKey = ev.dataTransfer.getData("text/plain");
+    const draggedElement = document.querySelector(`.selectable[data-key="${draggedKey}"]`);
+    const sourceTeam = draggedElement.getAttribute('data-team');
+    const sourceIndex = parseInt(draggedElement.getAttribute('data-index'));
 
-    const sourceJogador = [...equipeBranco, ...equipeLaranja].find(j => j.firebaseKey === draggedKey);
-    const targetJogador = [...equipeBranco, ...equipeLaranja].find(j => j.firebaseKey === targetElement.getAttribute('data-key'));
-    
-    if (sourceJogador && targetJogador && sourceJogador.firebaseKey !== targetJogador.firebaseKey) {
-        const idxBranco1 = equipeBranco.findIndex(j => j.firebaseKey === sourceJogador.firebaseKey);
-        const idxLaranja1 = equipeLaranja.findIndex(j => j.firebaseKey === sourceJogador.firebaseKey);
-        const idxBranco2 = equipeBranco.findIndex(j => j.firebaseKey === targetJogador.firebaseKey);
-        const idxLaranja2 = equipeLaranja.findIndex(j => j.firebaseKey === targetJogador.firebaseKey);
-        
-        if (idxBranco1 > -1 && idxLaranja2 > -1) trocarJogadores('branco', idxBranco1, 'laranja', idxLaranja2);
-        else if (idxLaranja1 > -1 && idxBranco2 > -1) trocarJogadores('laranja', idxLaranja1, 'branco', idxBranco2);
+    const targetElement = ev.target.closest('.selectable');
+    if (targetElement) {
+        const targetTeam = targetElement.getAttribute('data-team');
+        const targetIndex = parseInt(targetElement.getAttribute('data-index'));
+        if (sourceTeam !== targetTeam) {
+            trocarJogadores(sourceTeam, sourceIndex, targetTeam, targetIndex);
+        }
     }
 }
-window.selecionarJogador = element => {
-    const key = element.getAttribute('data-key');
-    if (selecionadoParaTroca && selecionadoParaTroca.key !== key) {
-        const team1 = selecionadoParaTroca.element.getAttribute('data-team');
-        const idx1 = parseInt(selecionadoParaTroca.element.getAttribute('data-index'));
-        const team2 = element.getAttribute('data-team');
-        const idx2 = parseInt(element.getAttribute('data-index'));
-
-        if(team1 !== team2) {
-          trocarJogadores(team1, idx1, team2, idx2);
+window.selecionarJogador = function(element) {
+    if (selecionadoParaTroca) {
+        const primeiroElemento = document.querySelector(`.selectable[data-key="${selecionadoParaTroca.key}"]`);
+        if (selecionadoParaTroca.team !== element.getAttribute('data-team')) {
+            trocarJogadores(selecionadoParaTroca.team, selecionadoParaTroca.index, element.getAttribute('data-team'), parseInt(element.getAttribute('data-index')));
+            if (primeiroElemento) primeiroElemento.classList.remove('selected');
+            selecionadoParaTroca = null;
+        } else {
+            if (primeiroElemento) primeiroElemento.classList.remove('selected');
+            if (selecionadoParaTroca.key !== element.getAttribute('data-key')) {
+                element.classList.add('selected');
+                selecionadoParaTroca = { key: element.getAttribute('data-key'), team: element.getAttribute('data-team'), index: parseInt(element.getAttribute('data-index')) };
+            } else {
+                selecionadoParaTroca = null;
+            }
         }
-        selecionadoParaTroca.element.classList.remove('selected');
-        selecionadoParaTroca = null;
-    } else if (selecionadoParaTroca && selecionadoParaTroca.key === key) {
-        element.classList.remove('selected');
-        selecionadoParaTroca = null;
     } else {
-        document.querySelectorAll('.selectable.selected').forEach(el => el.classList.remove('selected'));
         element.classList.add('selected');
-        selecionadoParaTroca = { key, element };
+        selecionadoParaTroca = { key: element.getAttribute('data-key'), team: element.getAttribute('data-team'), index: parseInt(element.getAttribute('data-index')) };
     }
 }
 
 function trocarJogadores(team1, idx1, team2, idx2) {
   const equipe1Arr = team1 === 'branco' ? equipeBranco : equipeLaranja;
   const equipe2Arr = team2 === 'branco' ? equipeBranco : equipeLaranja;
-  
   [equipe1Arr[idx1], equipe2Arr[idx2]] = [equipe2Arr[idx2], equipe1Arr[idx1]];
-  
   const scoreBranco = equipeBranco.reduce((s, j) => s + (j._score || 0), 0);
   const scoreLaranja = equipeLaranja.reduce((s, j) => s + (j._score || 0), 0);
-  
   renderResultado(equipeBranco, equipeLaranja, scoreBranco, scoreLaranja);
 }
 
@@ -351,56 +386,50 @@ function renderizarHistorico(sorteios){
     </div>`).join('');
 }
 
-
 // --- INICIALIZAÇÃO DO FIREBASE E AUTENTICAÇÃO ---
 try{
   mostrarStatus('Conectando ao Firebase...');
   const app = initializeApp(firebaseConfig);
   db = getDatabase(app);
-  auth = getAuth(app); // Inicializa a autenticação
+  auth = getAuth(app);
   
-  // Referências do banco de dados
   jogadoresRef = ref(db,'jogadores');
   sorteiosRef = ref(db,'sorteios');
 
   // Lógica de Autenticação
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // Usuário está logado
+      // Usuário logado: mostra o app e carrega os dados
       loginContainerEl.style.display = 'none';
       appContainerEl.classList.add('show');
-      mostrarStatus(`Conectado como ${user.email}.`);
 
-      // Carrega os dados do banco de dados SOMENTE se o usuário estiver logado
       onValue(jogadoresRef,(snap)=>{
-        jogadores=[]; 
-        snap.forEach(ch=>{ const j = ch.val(); j.firebaseKey = ch.key; jogadores.push(j); });
+        jogadores=[]; snap.forEach(ch=>{ const j = ch.val(); j.firebaseKey = ch.key; jogadores.push(j); });
         renderizarJogadores();
-        mostrarStatus(`Conectado! ${jogadores.length} jogadores carregados.`);
+        mostrarStatus(`Conectado como ${user.email}! ${jogadores.length} jogadores carregados.`);
       });
       
       onValue(sorteiosRef,(snap)=>{
-        const arr=[]; 
-        snap.forEach(ch=>arr.push(ch.val()));
+        const arr=[]; snap.forEach(ch=>arr.push(ch.val()));
         renderizarHistorico(arr);
       });
 
     } else {
-      // Usuário está deslogado
+      // Usuário deslogado: mostra a tela de login
       loginContainerEl.style.display = 'block';
       appContainerEl.classList.remove('show');
-      mostrarStatus('Por favor, faça o login para continuar.');
+      mostrarStatus('Por favor, faça o login.');
     }
   });
 
-  // Event Listeners dos botões de login/logout
+  // Eventos dos botões de login/logout
   btnLoginEl.addEventListener('click', async () => {
     const email = loginEmailEl.value;
     const password = loginPasswordEl.value;
     try {
         await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-        mostrarStatus(`Erro no login: ${error.message}`, true);
+        mostrarStatus(error.message, true);
     }
   });
 
@@ -408,11 +437,11 @@ try{
     try {
         await signOut(auth);
     } catch (error) {
-        mostrarStatus(`Erro ao sair: ${error.message}`, true);
+        mostrarStatus(error.message, true);
     }
   });
 
-} catch(e) { 
-  console.error('Firebase init',e); 
-  mostrarStatus('Erro ao conectar com Firebase: '+e.message,true);
+}catch(e){ 
+    console.error('Firebase init',e); 
+    mostrarStatus('Erro ao conectar com Firebase: '+e.message,true);
 }

@@ -6,30 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
   <style>
-    .login-container {
+    /* Estilos para controlar a visibilidade do login vs app */
+    #login-container {
       max-width: 400px;
       margin: 50px auto;
-      padding: 20px;
-      border: 1px solid var(--bd);
-      border-radius: 8px;
-      background-color: var(--card);
-      text-align: center;
-    }
-    .login-container input {
-      margin-bottom: 15px;
     }
     #app-container {
-      display: none; /* O app fica oculto por padrão */
+      display: none; /* O app começa oculto */
     }
     #app-container.show {
-      display: block; /* É exibido quando o usuário está logado */
+      display: block; /* O script remove/adiciona esta classe para mostrar o app */
     }
   </style>
 </head>
 <body>
-  <div id="status" class="status muted">Conectando ao Firebase...</div>
 
-  <div id="login-container" class="login-container">
+  <div id="status" class="status muted">Aguardando login...</div>
+
+  <div id="login-container" class="card">
     <h2>Login</h2>
     <input type="email" id="login-email" placeholder="E-mail" required>
     <input type="password" id="login-password" placeholder="Senha" required>
@@ -37,14 +31,15 @@
   </div>
 
   <div id="app-container">
-    <div style="text-align: right; margin-bottom: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Divisor de Equipes de Futebol</h1>
       <button id="btnLogout" class="btn btn-danger">Sair</button>
     </div>
-    <h1>Divisor de Equipes de Futebol</h1>
 
     <div class="grid two">
-      <div class="card">
+      <div class="card" id="add-edit-form">
         <h2>Adicionar / Editar Jogador</h2>
+
         <label for="nome">Nome *</label>
         <input id="nome" type="text" placeholder="Nome do jogador" required>
 
@@ -63,28 +58,38 @@
         </select>
 
         <label>Posições que joga *</label>
-        <div class="posicoes-grid">
-          <div class="pos-item">
-            <input type="checkbox" id="ataque" value="ataque"><label for="ataque">Ataque</label>
-            <input type="checkbox" id="preferida-ataque" class="preferida-check"><label for="preferida-ataque" class="small muted">Pref.</label>
-          </div>
-          <div class="pos-item">
-            <input type="checkbox" id="meio" value="meio"><label for="meio">Meio</label>
-            <input type="checkbox" id="preferida-meio" class="preferida-check"><label for="preferida-meio" class="small muted">Pref.</label>
-          </div>
-          <div class="pos-item">
-            <input type="checkbox" id="defesa" value="defesa"><label for="defesa">Defesa</label>
-            <input type="checkbox" id="preferida-defesa" class="preferida-check"><label for="preferida-defesa" class="small muted">Pref.</label>
-          </div>
-          <div class="pos-item">
-            <input type="checkbox" id="goleiro" value="goleiro"><label for="goleiro">Goleiro</label>
-            <input type="checkbox" id="preferida-goleiro" class="preferida-check"><label for="preferida-goleiro" class="small muted">Pref.</label>
-          </div>
+        <div class="pos-group" id="posicoes">
+          <label><input type="checkbox" value="goleiro">Goleiro</label>
+          <label><input type="checkbox" value="zagueiro">Zagueiro</label>
+          <label><input type="checkbox" value="lateral">Lateral</label>
+          <label><input type="checkbox" value="meio-campo">Meio-Campo</label>
+          <label><input type="checkbox" value="atacante">Atacante</label>
         </div>
 
-        <div class="row" style="margin-top:12px">
-          <label for="nivel">Nível</label><select id="nivel"></select>
-          <label for="agilidade">Agilidade</label><select id="agilidade"></select>
+        <label for="preferida">Posição preferida</label>
+        <select id="preferida">
+          <option value="">Nenhuma</option>
+          <option value="goleiro">Goleiro</option>
+          <option value="zagueiro">Zagueiro</option>
+          <option value="lateral">Lateral</option>
+          <option value="meio-campo">Meio-Campo</option>
+          <option value="atacante">Atacante</option>
+        </select>
+
+        <label>Atributos (0-10)</label>
+        <div class="number-grid">
+          <div><label>Velocidade</label><select id="velocidade"></select></div>
+          <div><label>Defesa</label><select id="defesa"></select></div>
+          <div><label>Ataque</label><select id="ataque"></select></div>
+          <div><label>Preparo Físico</label><select id="preparoFisico"></select></div>
+          <div><label>Cabeceio</label><select id="cabeceio"></select></div>
+          <div><label>Finalização</label><select id="finalizacao"></select></div>
+          <div><label>Passe</label><select id="passe"></select></div>
+          <div><label>Domínio</label><select id="dominio"></select></div>
+          <div><label>Drible</label><select id="drible"></select></div>
+          <div><label>Força</label><select id="forca"></select></div>
+          <div><label>Guarda Redes</label><select id="guardaRedes"></select></div>
+          <div><label>Agilidade</label><select id="agilidade"></select></div>
         </div>
 
         <div class="row" style="margin-top:12px">
@@ -116,16 +121,14 @@
     </div>
 
     <div class="card">
-      <h2>Jogadores (<span id="countJogadores">0</span>) / Selecionados (<span id="contSelecionados">0</span>)</h2>
-      <div id="listaJogadores" class="player-list"></div>
+      <h2>Jogadores (<span id="countJogadores">0</span>) <span id="contSelecionados" class="small muted"></span></h2>
+      <div id="listaJogadores" class="list"></div>
     </div>
 
     <div class="card">
       <h2>Histórico de Sorteios</h2>
-      <div id="historicoSorteios"></div>
+      <div id="historicoSorteios" class="list"></div>
     </div>
-  </div>
-
-  <script type="module" src="script.js"></script>
+  </div> <script type="module" src="script.js"></script>
 </body>
 </html>
