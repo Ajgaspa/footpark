@@ -513,4 +513,72 @@ onAuthStateChanged(auth, (user) => {
       jogadoresRef = ref(db, `jogadores`);
       sorteiosRef = ref(db, `sorteios`);
 
-      onValue
+      onValue(jogadoresRef, (snap) => {
+        jogadores = [];
+        snap.forEach(ch => {
+          const j = ch.val();
+          j.firebaseKey = ch.key;
+          jogadores.push(j);
+        });
+        renderizarJogadores();
+        mostrarStatus(`Conectado! ${jogadores.length} jogadores carregados.`);
+      });
+
+      onValue(sorteiosRef, (snap) => {
+        const arr = [];
+        snap.forEach(ch => arr.push(ch.val()));
+        renderizarHistorico(arr);
+      });
+
+    } catch (e) {
+      console.error('Firebase init', e);
+      mostrarStatus('Erro ao conectar com Firebase: ' + e.message, true);
+    }
+  } else {
+    UID = null;
+    authSection.style.display = 'block';
+    appContent.style.display = 'none';
+    mostrarStatus('Faça login para continuar.', false);
+  }
+});
+
+registerForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = registerForm['register-email'].value;
+  const password = registerForm['register-password'].value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      console.log('Usuário registrado com sucesso:', userCredential.user);
+    })
+    .catch((error) => {
+      console.error('Erro ao registrar:', error.message);
+      mostrarStatus('Erro ao registrar: ' + error.message, true);
+    });
+});
+
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = loginForm['login-email'].value;
+  const password = loginForm['login-password'].value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      console.log('Login bem-sucedido:', userCredential.user);
+    })
+    .catch((error) => {
+      console.error('Erro ao fazer login:', error.message);
+      mostrarStatus('Erro ao fazer login: ' + error.message, true);
+    });
+});
+
+logoutButton.addEventListener('click', () => {
+  signOut(auth)
+    .then(() => {
+      console.log('Usuário desconectado.');
+    })
+    .catch((error) => {
+      console.error('Erro ao fazer logout:', error.message);
+      mostrarStatus('Erro ao fazer logout: ' + error.message, true);
+    });
+});
