@@ -1,0 +1,143 @@
+:root{
+  --bg:#fff;--fg:#000;--muted:#666;--card:#f9f9f9;--bd:#ddd;
+  --accent:#4CAF50;--accent2:#45a049;--danger:#dc3545;--warn:#fd7e14;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#121212;--fg:#fff;--muted:#bbb;--card:#1e1e1e;--bd:#333;--accent:#2E7D32;--accent2:#256f29;}
+}
+body{font-family:system-ui,Arial,sans-serif;margin:16px;background:var(--bg);color:var(--fg);}
+h1,h2{margin:.4rem 0;text-align:center}
+.grid{display:grid;gap:12px}
+.two{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:12px}
+label{display:block;margin:.4rem 0 .2rem;font-weight:500}
+input,select{width:100%;padding:8px;border:1px solid var(--bd);background:var(--bg);color:var(--fg);border-radius:6px;font-size:14px}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 14px;border:none;border-radius:6px;cursor:pointer;background:var(--accent);color:#fff;font-size:14px}
+.btn:hover{background:var(--accent2)}
+.btn-warn{background:var(--warn)}
+.btn-danger{background:var(--danger)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.list .item{border:1px solid var(--bd);border-radius:8px;padding:12px;margin:8px 0;background:var(--card)}
+.small{color:var(--muted);font-size:.9rem}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.equipe{border:1px solid var(--bd);padding:12px;border-radius:8px;background:var(--card)}
+.equipe h3{margin:.2rem 0;color:var(--accent);text-align:center}
+.pill{display:flex;padding:2px 8px;border-radius:999px;margin-right:6px;font-size:.85rem}
+.pill-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pos-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pos-group label{display:flex;align-items:center;gap:6px;border:1px solid var(--bd);padding:8px 12px;border-radius:999px;cursor:pointer;margin:0}
+.pos-group input[type=checkbox]{width:auto}
+.status{margin:8px 0;text-align:center;font-weight:600;padding:8px;border-radius:6px}
+.status.ok{color:#2e7d32;background:#e8f5e8}
+.status.err{color:#c62828;background:#ffeaea}
+.muted{color:var(--muted)}
+.number-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.item-head{display:flex;justify-content:space-between;align-items:flex-start}
+.item-left{display:flex;gap:8px;align-items:flex-start}
+.item-right{text-align:right;flex:1;margin-left:12px}
+.skills-line{font-size:0.85em;color:var(--muted);margin-bottom:4px}
+.selectable{padding:4px 8px;margin:2px 0;border:1px solid var(--bd);border-radius:4px;background:var(--bg);cursor:pointer}
+.selectable:hover{background:var(--card)}
+.selectable.selected{background:var(--accent);color:#fff}
+.selectable[draggable="true"]{cursor:move}
+/* Posição cores */
+.goleiro{background:#FFD700;color:#000}
+.zagueiro{background:#1E90FF;color:#fff}
+.lateral{background:#FF8C00;color:#fff}
+.meio-campo{background:#2E7D32;color:#fff}
+.atacante{background:#DC143C;color:#fff}
+/* Alterações de layout das pílulas de posição */
+.player-positions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.position-pill {
+    display: flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #eee;
+    color: #222;
+    font-weight: bold;
+    margin-bottom: 3px;
+    cursor: default;
+    position: relative;
+}
+.position-star {
+    color: gold;
+    font-size: 1em;
+    margin-right: 3px;
+}
+.player-details {
+    margin-top: 6px;
+}
+.draggable-player {
+    cursor: grab;
+}
+.player-selected {
+    outline: 2px solid #3366ff;
+    background: #e0eeff;
+}
+.player-drop-target {
+    outline: 2px dashed #44bb44;
+}
+/* Novas regras para o card do jogador para suportar o novo layout */
+.item .item-left {
+    display: block; /* Mude para block para que o texto e as pílulas fiquem em linhas separadas */
+}
+.item .item-left .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+.item .item-left .pill {
+    display: flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: .85rem;
+    margin: 0;
+}
+.item .item-left .pill.preferida {
+    border: 2px solid gold;
+}
+/* Ajustes para a largura da página */
+.item .item-right {
+    display: block;
+    margin-left: 0;
+    flex: none;
+    width: auto;
+    max-width: 100%;
+    text-align: left;
+    margin-top: 8px;
+}
+.item .item-right .skills-line {
+    line-height: 1.5;
+    white-space: normal;
+}
+.selectable {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border: 1px solid var(--bd);
+    border-radius: 4px;
+    background: var(--bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.selectable:hover {
+    background: var(--card);
+}
+.selectable.selected {
+    background: var(--accent);
+    color: #fff;
+}
+.selectable[draggable="true"] {
+    cursor: move;
+}
